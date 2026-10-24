@@ -1,28 +1,37 @@
 import styles from './TopBar.module.css'
 
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="10.8" cy="10.8" r="6.3" />
+      <path d="m16 16 4 4" />
+    </svg>
+  )
+}
+
 function TopBar({ title, description }) {
   return (
     <header className={styles.topbar}>
-      <div className={styles.heading}>
-        <h1 className={styles.title}>{title}</h1>
-        <p className={styles.description}>{description}</p>
+      <div className={styles.pageInfo}>
+        <h1>{title}</h1>
+        <p>{description}</p>
       </div>
 
       <div className={styles.actions}>
-        <div className={styles.searchPlaceholder}>
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle cx="10.8" cy="10.8" r="6.3" />
-            <path d="m15.5 15.5 4.2 4.2" />
-          </svg>
-
-          <span>Search your library</span>
-
+        <label className={styles.searchBox}>
+          <SearchIcon />
+          <input
+            type="search"
+            placeholder="Search your library..."
+            aria-label="Search your library"
+            disabled
+          />
           <span className={styles.shortcut}>⌘ K</span>
-        </div>
+        </label>
 
         <div className={styles.offlineBadge}>
           <span />
-          <span>Offline</span>
+          Offline
         </div>
       </div>
     </header>

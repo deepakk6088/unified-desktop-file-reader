@@ -1,30 +1,28 @@
 .topbar {
   display: flex;
-  min-height: var(--topbar-height);
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 18px 36px;
-  background: rgb(16 17 20 / 88%);
+  min-height: var(--topbar-height);
+  padding: 20px 32px;
+  background: rgb(16 17 20 / 92%);
   border-bottom: 1px solid var(--color-border-subtle);
 }
 
-.heading {
+.pageInfo {
   min-width: 0;
 }
 
-.title {
+.pageInfo h1 {
   margin: 0;
-  color: var(--color-text-primary);
   font-size: var(--font-size-xl);
-  font-weight: 620;
-  letter-spacing: -0.65px;
-  line-height: 1.3;
+  font-weight: 650;
+  letter-spacing: -0.8px;
 }
 
-.description {
-  margin: 4px 0 0;
-  color: var(--color-text-muted);
+.pageInfo p {
+  margin: 7px 0 0;
+  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
 }
 
@@ -34,88 +32,88 @@
   gap: 16px;
 }
 
-.searchPlaceholder {
+.searchBox {
   display: flex;
-  width: 260px;
-  height: 40px;
   align-items: center;
   gap: 10px;
-  padding: 0 10px 0 12px;
-  color: var(--color-text-muted);
+  width: 250px;
+  height: 38px;
+  padding: 0 10px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  color: var(--color-text-muted);
 }
 
-.searchPlaceholder svg {
+.searchBox svg {
   width: 17px;
   height: 17px;
-  flex: 0 0 17px;
+  flex-shrink: 0;
+  fill: none;
   stroke: currentColor;
   stroke-width: 1.7;
   stroke-linecap: round;
 }
 
-.searchPlaceholder > span:first-of-type {
-  flex: 1;
-  font-size: var(--font-size-sm);
+.searchBox input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.searchBox input:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.searchBox input::placeholder {
+  color: var(--color-text-muted);
 }
 
 .shortcut {
-  padding: 3px 6px;
-  color: var(--color-text-muted);
-  font-size: 10px;
-  background: var(--color-surface-hover);
+  flex-shrink: 0;
+  padding: 3px 5px;
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: 4px;
+  font-size: 10px;
   white-space: nowrap;
 }
 
 .offlineBadge {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 11px;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-xs);
+  gap: 7px;
+  padding: 7px 10px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  white-space: nowrap;
+  border-radius: 20px;
+  color: var(--color-text-secondary);
+  font-size: 11px;
 }
 
-.offlineBadge span:first-child {
+.offlineBadge span {
   width: 6px;
   height: 6px;
   background: var(--color-success);
   border-radius: 50%;
 }
 
-@media (max-width: 1050px) {
+@media (max-width: 1000px) {
   .topbar {
-    padding-right: 24px;
-    padding-left: 24px;
+    padding-right: 20px;
+    padding-left: 20px;
   }
 
-  .searchPlaceholder {
-    width: 210px;
-  }
-}
-
-@media (max-width: 760px) {
-  .topbar {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 16px;
-    padding: 22px;
+  .searchBox {
+    width: 190px;
   }
 
   .actions {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-
-  .searchPlaceholder {
-    width: min(100%, 320px);
+    gap: 10px;
   }
 }

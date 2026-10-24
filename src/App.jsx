@@ -13,18 +13,10 @@ function App() {
     setActivePage('reader')
   }
 
-  function handleNavigate(page) {
-    setActivePage(page)
-  }
-
-  function handleBackToLibrary() {
-    setActivePage('library')
-  }
-
   return (
     <AppLayout
       activePage={activePage}
-      onNavigate={handleNavigate}
+      onNavigate={setActivePage}
     >
       {activePage === 'library' && (
         <Library onOpenDocument={handleOpenDocument} />
@@ -33,12 +25,12 @@ function App() {
       {activePage === 'reader' && (
         <Reader
           document={selectedDocument}
-          onBack={handleBackToLibrary}
+          onBack={() => setActivePage('library')}
         />
       )}
 
       {activePage === 'settings' && (
-        <Settings onNavigate={handleNavigate} />
+        <Settings onNavigate={setActivePage} />
       )}
     </AppLayout>
   )

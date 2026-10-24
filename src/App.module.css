@@ -1,0 +1,26 @@
+
+.placeholder {
+  padding: 36px;
+}
+
+.eyebrow {
+  color: var(--color-accent);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 1.8px;
+}
+
+.placeholder h2 {
+  margin: 12px 0 8px;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  letter-spacing: -0.8px;
+}
+
+.placeholder p {
+  max-width: 420px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-md);
+  line-height: 1.8;
+}

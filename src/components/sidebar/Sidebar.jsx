@@ -1,36 +1,38 @@
 import styles from './Sidebar.module.css'
 
-function LibraryIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="4" y="4" width="6" height="16" rx="1.5" />
-      <rect x="13" y="4" width="7" height="10" rx="1.5" />
-      <rect x="13" y="17" width="7" height="3" rx="1.5" />
-    </svg>
-  )
-}
+function NavIcon({ type }) {
+  if (type === 'library') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="4" y="4" width="6" height="16" rx="1.5" />
+        <rect x="13" y="4" width="7" height="10" rx="1.5" />
+        <rect x="13" y="17" width="7" height="3" rx="1.5" />
+      </svg>
+    )
+  }
 
-function SettingsIcon() {
+  if (type === 'reader') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 5.5c3.1-1.2 5.8-.8 8 1.2v13c-2.2-2-4.9-2.4-8-1.2z" />
+        <path d="M20 5.5c-3.1-1.2-5.8-.8-8 1.2v13c2.2-2 4.9-2.4 8-1.2z" />
+      </svg>
+    )
+  }
+
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 2.94-.08-.02a1.7 1.7 0 0 0-1.77.55l-.05.07h-3.4l-.03-.08a1.7 1.7 0 0 0-1.43-1.12l-.09-.01-1.7-2.94.06-.07A1.7 1.7 0 0 0 9.9 14.5l-.02-.09v-3.4l.08-.03a1.7 1.7 0 0 0 1.12-1.43l.01-.09 2.94-1.7.07.06a1.7 1.7 0 0 0 1.88.34l.06-.03 2.94 1.7-.02.08a1.7 1.7 0 0 0 .55 1.77l.07.05v3.4z" />
+      <path d="M19 13.5a1.6 1.6 0 0 0 .4 1.7l.1.1-1.7 2.9-.1-.1a1.6 1.6 0 0 0-1.7.4l-.1.1h-3.4l-.1-.1a1.6 1.6 0 0 0-1.7-.4l-.1.1-1.7-2.9.1-.1a1.6 1.6 0 0 0 .4-1.7l-.1-.1v-2.8l.1-.1a1.6 1.6 0 0 0-.4-1.7l-.1-.1 1.7-2.9.1.1a1.6 1.6 0 0 0 1.7-.4l.1-.1h3.4l.1.1a1.6 1.6 0 0 0 1.7.4l.1-.1 1.7 2.9-.1.1a1.6 1.6 0 0 0-.4 1.7l.1.1v2.8z" />
     </svg>
   )
 }
 
 function Sidebar({ activePage, onNavigate }) {
   const navigationItems = [
-    {
-      id: 'library',
-      label: 'Library',
-      icon: LibraryIcon,
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      icon: SettingsIcon,
-    },
+    { id: 'library', label: 'Library', icon: 'library' },
+    { id: 'reader', label: 'Reader', icon: 'reader' },
+    { id: 'settings', label: 'Settings', icon: 'settings' },
   ]
 
   return (
@@ -52,7 +54,7 @@ function Sidebar({ activePage, onNavigate }) {
       <div className={styles.sectionLabel}>WORKSPACE</div>
 
       <nav className={styles.navigation} aria-label="Main navigation">
-        {navigationItems.map(({ id, label, icon: Icon }) => (
+        {navigationItems.map(({ id, label, icon }) => (
           <button
             key={id}
             type="button"
@@ -63,12 +65,14 @@ function Sidebar({ activePage, onNavigate }) {
             aria-current={activePage === id ? 'page' : undefined}
           >
             <span className={styles.navIcon}>
-              <Icon />
+              <NavIcon type={icon} />
             </span>
 
             <span>{label}</span>
 
-            {activePage === id && <span className={styles.activeMarker} />}
+            {activePage === id && (
+              <span className={styles.activeMarker} />
+            )}
           </button>
         ))}
       </nav>

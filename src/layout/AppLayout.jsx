@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import Sidebar from '../components/sidebar/sidebar.jsx'
 import TopBar from '../components/topbar/topbar.jsx'
 import styles from './AppLayout.module.css'
@@ -8,21 +7,24 @@ const pageDetails = {
     title: 'Your Library',
     description: 'All your documents, in one quiet place.',
   },
+  reader: {
+    title: 'Reader',
+    description: 'A focused space for your next read.',
+  },
   settings: {
     title: 'Settings',
     description: 'Customize your reading workspace.',
   },
 }
 
-function AppLayout({ children }) {
-  const [activePage, setActivePage] = useState('library')
-  const currentPage = pageDetails[activePage]
+function AppLayout({ activePage, onNavigate, children }) {
+  const currentPage = pageDetails[activePage] ?? pageDetails.library
 
   return (
     <div className={styles.appShell}>
       <Sidebar
         activePage={activePage}
-        onNavigate={setActivePage}
+        onNavigate={onNavigate}
       />
 
       <div className={styles.mainColumn}>
@@ -32,9 +34,7 @@ function AppLayout({ children }) {
         />
 
         <main className={styles.content}>
-          {typeof children === 'function'
-            ? children(activePage)
-            : children}
+          {children}
         </main>
       </div>
     </div>

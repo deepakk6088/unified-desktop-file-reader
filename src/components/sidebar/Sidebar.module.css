@@ -1,8 +1,9 @@
-
 .sidebar {
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  height: 100%;
   padding: 28px 16px 16px;
   background: var(--color-sidebar);
   border-right: 1px solid var(--color-border-subtle);
@@ -12,55 +13,60 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 10px;
-  margin-bottom: 48px;
+  padding: 0 8px;
+  margin-bottom: 42px;
 }
 
-.appMark {
+.brandIcon {
   display: grid;
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
   place-items: center;
-  color: #e4d9ff;
-  background: linear-gradient(145deg, #42365f, #292336);
-  border: 1px solid rgb(190 170 255 / 22%);
-  border-radius: 13px;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  background: linear-gradient(145deg, #b6a0ff, #8163df);
+  border-radius: 11px;
+  box-shadow: 0 4px 16px rgb(124 92 219 / 18%);
 }
 
-.appMark svg {
-  width: 30px;
-  height: 30px;
+.brandIcon svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .brandText {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 5px;
+  min-width: 0;
 }
 
 .brandName {
-  color: var(--color-text-primary);
-  font-size: 23px;
+  font-size: 14px;
   font-weight: 650;
-  letter-spacing: -1.2px;
-  line-height: 1.15;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
 }
 
 .brandCaption {
   color: var(--color-text-muted);
   font-size: 9px;
-  font-weight: 650;
-  letter-spacing: 1.55px;
+  font-weight: 700;
+  letter-spacing: 1.15px;
+  white-space: nowrap;
 }
 
 .sectionLabel {
-  padding: 0 12px;
+  padding: 0 10px;
   margin-bottom: 12px;
   color: var(--color-text-muted);
   font-size: 10px;
-  font-weight: 650;
-  letter-spacing: 1.35px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
 }
 
 .navigation {
@@ -72,64 +78,67 @@
 .navItem {
   position: relative;
   display: flex;
-  width: 100%;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  color: var(--color-text-secondary);
-  text-align: left;
+  width: 100%;
+  min-height: 43px;
+  padding: 0 12px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-align: left;
   cursor: pointer;
   transition:
-    background 160ms ease,
-    color 160ms ease,
-    border-color 160ms ease;
+    background 150ms ease,
+    color 150ms ease,
+    border-color 150ms ease;
 }
 
-.navItem svg {
+.navItem:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.navItem.active {
+  background: var(--color-surface-active);
+  border-color: rgb(167 139 250 / 10%);
+  color: var(--color-accent);
+}
+
+.navIcon {
+  display: grid;
+  place-items: center;
   width: 19px;
   height: 19px;
-  flex: 0 0 19px;
+}
+
+.navIcon svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
   stroke: currentColor;
-  stroke-width: 1.7;
+  stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.navItem span:not(.activeIndicator) {
-  font-size: var(--font-size-md);
-  font-weight: 500;
-}
-
-.navItem:hover {
-  color: var(--color-text-primary);
-  background: var(--color-surface-hover);
-}
-
-.navItemActive,
-.navItemActive:hover {
-  color: #d8caff;
-  background: var(--color-accent-soft);
-  border-color: rgb(167 139 250 / 12%);
-}
-
-.activeIndicator {
+.activeMarker {
   position: absolute;
-  top: 11px;
+  top: 10px;
   right: -1px;
-  bottom: 11px;
-  width: 2px;
+  width: 3px;
+  height: 21px;
   background: var(--color-accent);
-  border-radius: 2px 0 0 2px;
+  border-radius: 4px 0 0 4px;
 }
 
-.sidebarBottom {
+.sidebarFooter {
   margin-top: auto;
 }
 
-.storageCard {
+.statusCard {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -139,72 +148,56 @@
   border-radius: var(--radius-md);
 }
 
-.storageIcon {
+.statusIcon {
   display: grid;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
   place-items: center;
-  color: var(--color-text-secondary);
-  background: var(--color-surface-hover);
-  border-radius: var(--radius-sm);
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  background: rgb(110 214 160 / 9%);
+  border-radius: 8px;
+  color: var(--color-success);
 }
 
-.storageIcon svg {
-  width: 18px;
-  height: 18px;
+.statusIcon svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
   stroke: currentColor;
   stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.storageText {
+.statusText {
   display: flex;
-  min-width: 0;
   flex: 1;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  min-width: 0;
 }
 
-.storageTitle {
-  color: var(--color-text-primary);
-  font-size: var(--font-size-sm);
-  font-weight: 550;
+.statusTitle {
+  font-size: 11px;
+  font-weight: 600;
 }
 
-.storageDescription {
+.statusDescription {
   color: var(--color-text-muted);
-  font-size: var(--font-size-xs);
+  font-size: 10px;
+  white-space: nowrap;
 }
 
-.statusDot,
-.footerDot {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 7px;
+.statusDot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
   background: var(--color-success);
   border-radius: 50%;
 }
 
-.footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 18px 0 4px;
+.version {
+  padding: 17px 8px 0;
   color: var(--color-text-muted);
   font-size: 10px;
-}
-
-.footerDot {
-  width: 6px;
-  height: 6px;
-  flex-basis: 6px;
-}
-
-@media (max-height: 620px) {
-  .brand {
-    margin-bottom: 28px;
-  }
 }

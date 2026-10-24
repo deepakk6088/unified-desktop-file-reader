@@ -1,21 +1,21 @@
 import { useState } from 'react'
 import Sidebar from '../components/sidebar/sidebar.jsx'
-import TopBar from  '../components/topbar/topbar.jsx'
+import TopBar from '../components/topbar/topbar.jsx'
 import styles from './AppLayout.module.css'
 
 const pageDetails = {
-  Library: {
-    title: 'Your library',
-    description: 'Your personal space for reading and discovery.',
+  library: {
+    title: 'Your Library',
+    description: 'All your documents, in one quiet place.',
   },
-  Settings: {
+  settings: {
     title: 'Settings',
-    description: 'Make your reading space feel like yours.',
+    description: 'Customize your reading workspace.',
   },
 }
 
 function AppLayout({ children }) {
-  const [activePage, setActivePage] = useState('Library')
+  const [activePage, setActivePage] = useState('library')
   const currentPage = pageDetails[activePage]
 
   return (

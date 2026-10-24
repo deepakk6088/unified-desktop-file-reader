@@ -1,7 +1,9 @@
+
 import { useState } from 'react'
 import sampleDocuments from '../../data/sampleDocuments.js'
 import DocumentCard from '../../components/documents/DocumentCard.jsx'
 import styles from './Library.module.css'
+import { selectDocuments } from '../../services/fileService.js'
 
 const filters = ['All', 'PDF', 'EPUB', 'DOCX']
 
@@ -50,7 +52,7 @@ function EmptyState({ isSearch, onReset }) {
       <p>
         {isSearch
           ? 'Try a different title, author, category, or format.'
-          : 'Your documents will appear here when document importing is implemented.'}
+          : 'Your documents will appear here when you add them.'}
       </p>
 
       <button type="button" onClick={onReset}>
@@ -61,19 +63,92 @@ function EmptyState({ isSearch, onReset }) {
 }
 
 function Library({ onOpenDocument }) {
+  const [documents, setDocuments] = useState(sampleDocuments)
+  const [isPickingFiles, setIsPickingFiles] = useState(false)
+  const [fileError, setFileError] = useState('')
+
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState('All')
   const [view, setView] = useState('grid')
 
+  async function handleAddDocuments() {
+    if (isPickingFiles) return
+
+    setIsPickingFiles(true)
+    setFileError('')
+
+    try {
+      const result = await selectDocuments()
+
+      // Closing the native dialog without selecting files changes nothing.
+      if (result.canceled || result.files.length === 0) return
+
+      setDocuments((currentDocuments) => {
+        const existingPaths = new Set(
+          currentDocuments
+            .filter((document) => document.filePath)
+            .map((document) => document.filePath),
+        )
+
+        const newPaths = new Set(existingPaths)
+
+        const newDocuments = result.files
+          .filter((file) => {
+            if (newPaths.has(file.filePath)) return false
+
+            // Also prevent duplicates within the same selection.
+            newPaths.add(file.filePath)
+            return true
+          })
+          .map((file) => ({
+            id: `import-${crypto.randomUUID()}`,
+            title: file.title,
+            author: 'Imported document',
+            format: file.format,
+            category: 'Imported',
+            updatedAt: 'Added just now',
+            progress: 0,
+            color:
+              file.format === 'PDF'
+                ? 'violet'
+                : file.format === 'EPUB'
+                  ? 'green'
+                  : 'blue',
+            filePath: file.filePath,
+            fileName: file.fileName,
+            isImported: true,
+          }))
+
+        return [...newDocuments, ...currentDocuments]
+      })
+    } catch (error) {
+      console.error('Unable to add documents:', error)
+      setFileError('Could not open the file picker. Please try again.')
+    } finally {
+      setIsPickingFiles(false)
+    }
+  }
+
+  function handleRemoveDocument(documentId) {
+    setDocuments((currentDocuments) =>
+      currentDocuments.filter(
+        (document) => document.id !== documentId,
+      ),
+    )
+  }
+
   const normalizedQuery = searchQuery.trim().toLowerCase()
 
-  const filteredDocuments = sampleDocuments.filter((document) => {
+  const filteredDocuments = documents.filter((document) => {
     const matchesSearch = [
       document.title,
       document.author,
       document.category,
       document.format,
-    ].some((value) => value.toLowerCase().includes(normalizedQuery))
+    ]
+      .join(' ')
+      .toLowerCase()
+      .includes(normalizedQuery)
 
     const matchesFormat =
       activeFilter === 'All' || document.format === activeFilter
@@ -81,8 +156,9 @@ function Library({ onOpenDocument }) {
     return matchesSearch && matchesFormat
   })
 
-  const hasDocuments = sampleDocuments.length > 0
-  const hasFilters = normalizedQuery !== '' || activeFilter !== 'All'
+  const hasDocuments = documents.length > 0
+  const hasFilters =
+    normalizedQuery !== '' || activeFilter !== 'All'
 
   function resetFilters() {
     setSearchQuery('')
@@ -101,8 +177,8 @@ function Library({ onOpenDocument }) {
         </div>
 
         <div className={styles.documentCount}>
-          <span>{sampleDocuments.length}</span>
-          <span>Sample documents</span>
+          <span>{documents.length}</span>
+          <span>Total documents</span>
         </div>
       </section>
 
@@ -111,14 +187,23 @@ function Library({ onOpenDocument }) {
           <div>
             <h3>Your documents</h3>
             <p>
-              {filteredDocuments.length} of {sampleDocuments.length} documents
+              {filteredDocuments.length} of {documents.length} documents
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={handleAddDocuments}
+            disabled={isPickingFiles}
+          >
+            {isPickingFiles ? 'Opening…' : 'Add Documents'}
+          </button>
         </div>
 
         <div className={styles.toolbar}>
           <label className={styles.searchBox}>
             <SearchIcon />
+
             <input
               type="search"
               placeholder="Search by title, author, category..."
@@ -140,13 +225,18 @@ function Library({ onOpenDocument }) {
           </label>
 
           <div className={styles.toolbarRight}>
-            <div className={styles.filters} aria-label="Filter by format">
+            <div
+              className={styles.filters}
+              aria-label="Filter by format"
+            >
               {filters.map((filter) => (
                 <button
                   key={filter}
                   type="button"
                   className={
-                    activeFilter === filter ? styles.filterActive : ''
+                    activeFilter === filter
+                      ? styles.filterActive
+                      : ''
                   }
                   onClick={() => setActiveFilter(filter)}
                   aria-pressed={activeFilter === filter}
@@ -156,7 +246,10 @@ function Library({ onOpenDocument }) {
               ))}
             </div>
 
-            <div className={styles.viewSwitch} aria-label="Document layout">
+            <div
+              className={styles.viewSwitch}
+              aria-label="Document layout"
+            >
               <button
                 type="button"
                 className={view === 'grid' ? styles.viewActive : ''}
@@ -180,6 +273,8 @@ function Library({ onOpenDocument }) {
           </div>
         </div>
 
+        {fileError && <p role="alert">{fileError}</p>}
+
         {!hasDocuments || filteredDocuments.length === 0 ? (
           <EmptyState
             isSearch={hasDocuments && hasFilters}
@@ -188,7 +283,9 @@ function Library({ onOpenDocument }) {
         ) : (
           <div
             className={
-              view === 'grid' ? styles.documentGrid : styles.documentList
+              view === 'grid'
+                ? styles.documentGrid
+                : styles.documentList
             }
           >
             {filteredDocuments.map((document) => (
@@ -197,6 +294,7 @@ function Library({ onOpenDocument }) {
                 document={document}
                 view={view}
                 onOpen={onOpenDocument}
+                onRemove={handleRemoveDocument}
               />
             ))}
           </div>
@@ -205,7 +303,9 @@ function Library({ onOpenDocument }) {
 
       <div className={styles.notice}>
         <span />
-        Sample entries only — no files have been imported or read from disk.
+        {documents.some((document) => document.isImported)
+          ? 'Your library contains sample entries and imported documents.'
+          : 'Sample entries only — add documents to your library.'}
       </div>
     </div>
   )

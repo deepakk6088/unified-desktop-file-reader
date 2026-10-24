@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { registerFileHandlers } from './fileHandlers.js'
 
 const currentDirectory = fileURLToPath(new URL('.', import.meta.url))
 
@@ -18,14 +19,14 @@ function createWindow() {
       sandbox: true,
     },
   })
-
+ 
   if (app.isPackaged) {
     mainWindow.loadFile(join(currentDirectory, '../dist/index.html'))
   } else {
     mainWindow.loadURL('http://127.0.0.1:5173')
   }
 }
-
+registerFileHandlers()
 app.whenReady().then(() => {
   createWindow()
 

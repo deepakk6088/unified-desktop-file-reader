@@ -61,7 +61,63 @@
 }
 
 .sectionHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   margin-bottom: 18px;
+}
+
+.addDocumentsButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 38px;
+  padding: 0 14px;
+  background: var(--color-accent);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #17131f;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 150ms ease, opacity 150ms ease;
+}
+
+.addDocumentsButton:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.addDocumentsButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.addDocumentsButton:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.addButtonIcon {
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.fileError {
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  background: rgb(239 105 105 / 8%);
+  border: 1px solid rgb(239 105 105 / 28%);
+  border-radius: 8px;
+  color: #ffaaaa;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .sectionHeading h3 {
@@ -313,6 +369,11 @@
 }
 
 @media (max-width: 650px) {
+  .sectionHeading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .welcome {
     align-items: flex-start;
     flex-direction: column;

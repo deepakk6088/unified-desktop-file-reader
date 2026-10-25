@@ -123,7 +123,11 @@ function Library({ onOpenDocument }) {
       })
     } catch (error) {
       console.error('Unable to add documents:', error)
-      setFileError('Could not open the file picker. Please try again.')
+      setFileError(
+        error instanceof Error
+          ? error.message
+          : 'Could not open the file picker. Please try again.',
+      )
     } finally {
       setIsPickingFiles(false)
     }
@@ -193,10 +197,12 @@ function Library({ onOpenDocument }) {
 
           <button
             type="button"
+            className={styles.addDocumentsButton}
             onClick={handleAddDocuments}
             disabled={isPickingFiles}
           >
-            {isPickingFiles ? 'Opening…' : 'Add Documents'}
+            <span className={styles.addButtonIcon} aria-hidden="true">+</span>
+            {isPickingFiles ? 'Opening picker…' : 'Add Documents'}
           </button>
         </div>
 
@@ -273,7 +279,11 @@ function Library({ onOpenDocument }) {
           </div>
         </div>
 
-        {fileError && <p role="alert">{fileError}</p>}
+        {fileError && (
+          <p className={styles.fileError} role="alert">
+            {fileError}
+          </p>
+        )}
 
         {!hasDocuments || filteredDocuments.length === 0 ? (
           <EmptyState

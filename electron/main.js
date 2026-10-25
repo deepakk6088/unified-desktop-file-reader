@@ -1,7 +1,6 @@
 
 import { app, BrowserWindow } from 'electron'
 import { join } from 'node:path'
-import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { registerFileHandlers } from './fileHandlers.js'
 import { registerStorageHandlers } from './storage.js'
@@ -14,7 +13,7 @@ function createWindow() {
     height: 800,
     minWidth: 900,
     minHeight: 600,
-    title: 'Unified Desktop File Reader',
+    title: 'DocNest',
     webPreferences: {
       preload: join(currentDirectory, 'preload.cjs'),
       contextIsolation: true,
@@ -24,7 +23,7 @@ function createWindow() {
   })
 
   if (app.isPackaged) {
-    mainWindow.loadFile(join(currentDirectory, '../dist/index.html'))
+    mainWindow.loadFile(join(app.getAppPath(), 'dist', 'index.html'))
   } else {
     mainWindow.loadURL('http://127.0.0.1:5173')
   }

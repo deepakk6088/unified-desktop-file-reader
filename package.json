@@ -1,14 +1,19 @@
+
 {
-  "name": "unified-desktop-file-reader",
+  "name": "docnest",
+  "productName": "DocNest",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "main": "electron/main.js",
   "scripts": {
     "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && electron .\"",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "package:mac": "npm run build && electron-builder --mac dmg zip",
+    "package:mac:arm64": "npm run build && electron-builder --mac arm64 dmg zip",
+    "package:mac:x64": "npm run build && electron-builder --mac x64 dmg zip"
   },
   "dependencies": {
     "dompurify": "^3.4.17",
@@ -25,11 +30,32 @@
     "@vitejs/plugin-react": "^6.1.2",
     "concurrently": "^9.0.0",
     "electron": "^40.0.0",
+    "electron-builder": "^26.0.12",
     "eslint": "^10.13.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",
     "globals": "^17.13.0",
     "vite": "^8.3.4",
     "wait-on": "^8.0.0"
+  },
+  "build": {
+    "appId": "com.docnest.reader",
+    "productName": "DocNest",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    }
   }
 }

@@ -1,10 +1,9 @@
-
 import PDFReader from './PDFReader.jsx'
 import EPUBReader from './EPUBReader.jsx'
 import DOCXReader from './DOCXReader.jsx'
 import styles from './Reader.module.css'
 
-function Reader({ document, onBack }) {
+function Reader({ document, onBack, preferences }) {
   const title = document?.title ?? 'A Guide to Focused Reading'
   const format = document?.format ?? 'SAMPLE'
   const category = document?.category ?? 'Reading sample'
@@ -25,7 +24,9 @@ function Reader({ document, onBack }) {
           </button>
 
           <span className={styles.previewBadge}>
-            {supportedFormat ? `${format} READER` : 'UNSUPPORTED FORMAT'}
+            {supportedFormat
+              ? `${format} READER`
+              : 'UNSUPPORTED FORMAT'}
           </span>
         </div>
 
@@ -38,14 +39,27 @@ function Reader({ document, onBack }) {
         <h2>{title}</h2>
 
         {format === 'PDF' && <PDFReader document={document} />}
-        {format === 'EPUB' && <EPUBReader document={document} />}
-        {format === 'DOCX' && <DOCXReader document={document} />}
+
+        {format === 'EPUB' && (
+          <EPUBReader
+            document={document}
+            preferences={preferences}
+          />
+        )}
+
+        {format === 'DOCX' && (
+          <DOCXReader
+            document={document}
+            preferences={preferences}
+          />
+        )}
 
         {!supportedFormat && (
           <article className={styles.paper}>
+            <h3>Format not supported</h3>
             <p>
-              This file format is not supported. Add a PDF, EPUB, or DOCX
-              document to read it here.
+              This file format cannot be opened here. Import a PDF,
+              EPUB, or DOCX document to read it in the application.
             </p>
           </article>
         )}
@@ -91,7 +105,11 @@ function Reader({ document, onBack }) {
           </div>
         </aside>
 
-        <article className={styles.paper}>
+        <article
+          className={`${styles.paper} ${
+            styles[`width-${preferences?.readingWidth ?? 'comfortable'}`]
+          }`}
+        >
           <div className={styles.documentMeta}>
             <span>{category}</span>
             <span className={styles.metaDivider}>/</span>
@@ -101,7 +119,8 @@ function Reader({ document, onBack }) {
           <h2>{title}</h2>
 
           <p className={styles.subtitle}>
-            A sample reading experience for your unified document workspace.
+            A sample reading experience for your unified document
+            workspace.
           </p>
 
           <div className={styles.rule} />
@@ -109,30 +128,31 @@ function Reader({ document, onBack }) {
           <h3>Introduction</h3>
 
           <p>
-            A good reading environment helps you spend less time managing
-            documents and more time understanding what matters. This preview
-            demonstrates the reading layout that will eventually display your
-            selected documents.
+            A good reading environment helps you spend less time
+            managing documents and more time understanding what
+            matters. This preview demonstrates the reading layout
+            for your unified document workspace.
           </p>
 
           <p>
-            In the finished application, this space will adapt to the document
-            format. For now, the content is static sample text so you can
-            review the typography, line length, spacing, and reading controls.
+            In the finished application, this space adapts to the
+            document format. For now, this is static sample text
+            for reviewing typography, line length, and spacing.
           </p>
 
           <blockquote>
-            Make space for focused reading. A simple, consistent environment
-            can make returning to a document feel effortless.
+            Make space for focused reading. A simple, consistent
+            environment can make returning to a document feel
+            effortless.
           </blockquote>
 
           <h3>Building a routine</h3>
 
           <p>
-            Break longer reading sessions into manageable sections. Keep the
-            interface quiet and the content easy to scan. Progress indicators
-            and bookmarks can help you return to the right place without
-            searching through the document again.
+            Break longer reading sessions into manageable sections.
+            Keep the interface quiet and the content easy to scan.
+            Progress indicators and bookmarks can help you return
+            to the right place.
           </p>
 
           <div className={styles.pageFooter}>
@@ -142,16 +162,20 @@ function Reader({ document, onBack }) {
         </article>
       </div>
 
-      <div className={styles.readingFooter}>
-        <div>
-          <span className={styles.progressLabel}>READING PROGRESS</span>
-          <div className={styles.progressTrack}>
-            <span />
+      {preferences?.showProgress !== false && (
+        <div className={styles.readingFooter}>
+          <div>
+            <span className={styles.progressLabel}>
+              READING PROGRESS
+            </span>
+            <div className={styles.progressTrack}>
+              <span />
+            </div>
           </div>
-        </div>
 
-        <span className={styles.progressValue}>25%</span>
-      </div>
+          <span className={styles.progressValue}>25%</span>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,239 +1,35 @@
-.reader {
-  max-width: 1200px;
-  margin: 0 auto;
+.reader h2 {
+  overflow-wrap: anywhere;
 }
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.backButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  padding: 8px 0;
-  background: transparent;
-  border: 0;
-  color: var(--color-text-secondary);
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.backButton:hover {
-  color: var(--color-text);
-}
-
-.backButton span {
-  font-size: 18px;
-}
-
-.previewBadge {
-  padding: 6px 9px;
-  background: var(--color-accent-soft);
-  border: 1px solid rgb(167 139 250 / 16%);
-  border-radius: 6px;
-  color: var(--color-accent);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.7px;
-}
-
-.readerLayout {
-  display: grid;
-  grid-template-columns: 190px minmax(0, 1fr);
-  align-items: start;
-  gap: 24px;
-}
-
-.contents {
-  position: sticky;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 16px 10px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-}
-
-.contentsHeading {
-  padding: 3px 8px 12px;
-  color: var(--color-text-muted);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-
-.contents button {
-  padding: 10px 9px;
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
-  color: var(--color-text-secondary);
-  font-size: 11px;
-  text-align: left;
-  cursor: default;
-}
-
-.contents button.contentsActive {
-  background: var(--color-surface-active);
-  color: var(--color-accent);
-}
-
-.contentsFooter {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  margin-top: 20px;
-  padding: 15px 8px 3px;
-  border-top: 1px solid var(--color-border);
-}
-
-.contentsFooter span {
-  color: var(--color-text-muted);
-  font-size: 10px;
-}
-
-.contentsFooter strong {
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.paper {
-  max-width: 760px;
-  min-width: 0;
-  margin: 0 auto;
-  padding: clamp(24px, 5vw, 56px);
-  background: #17181d;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-}
-
-.documentMeta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-  color: var(--color-text-muted);
-  font-size: 10px;
-}
-
-.metaDivider {
-  color: #4a4a55;
-}
-
-.paper h2 {
-  margin: 25px 0 12px;
-  font-size: clamp(25px, 3vw, 36px);
-  font-weight: 600;
-  letter-spacing: -1.1px;
-  line-height: 1.25;
-}
-
-.subtitle {
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  line-height: 1.7;
-}
-
-.rule {
-  height: 1px;
-  margin: 30px 0;
-  background: var(--color-border);
-}
-
-.paper h3 {
-  margin: 28px 0 12px;
-  font-size: 17px;
-  font-weight: 600;
-}
-
-.paper p:not(.subtitle) {
-  color: #c0bfca;
-  font-size: 13px;
-  line-height: 1.95;
-}
-
-.paper blockquote {
-  margin: 25px 0;
-  padding: 15px 18px;
-  background: rgb(167 139 250 / 5%);
-  border-left: 2px solid var(--color-accent);
-  color: #d1c5f5;
-  font-size: 13px;
-  line-height: 1.8;
-}
-
-.pageFooter {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 36px;
-  padding-top: 16px;
-  border-top: 1px solid var(--color-border);
-  color: var(--color-text-muted);
-  font-size: 10px;
-}
-
-.readingFooter {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  max-width: 760px;
-  margin: 18px auto 0;
-}
-
-.readingFooter > div {
-  flex: 1;
-}
-
-.progressLabel {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--color-text-muted);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.9px;
-}
-
-.progressTrack {
-  height: 4px;
-  overflow: hidden;
-  background: #2b2c34;
+.backButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
   border-radius: 4px;
 }
 
-.progressTrack span {
-  display: block;
-  width: 25%;
-  height: 100%;
-  background: var(--color-accent);
+@media (max-width: 520px) {
+  .toolbar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .paper {
+    padding: 22px;
+  }
+
+  .pageFooter {
+    flex-wrap: wrap;
+  }
+}
+.paper.width-narrow {
+  max-width: 620px;
 }
 
-.progressValue {
-  margin-top: 15px;
-  color: var(--color-text-secondary);
-  font-size: 11px;
+.paper.width-comfortable {
+  max-width: 760px;
 }
 
-@media (max-width: 900px) {
-  .readerLayout {
-    grid-template-columns: 1fr;
-  }
-
-  .contents {
-    position: static;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .contentsHeading,
-  .contentsFooter {
-    grid-column: 1 / -1;
-  }
+.paper.width-wide {
+  max-width: 1100px;
 }

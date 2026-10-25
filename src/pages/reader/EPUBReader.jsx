@@ -4,10 +4,40 @@ import ePub from 'epubjs'
 import { readDocument } from '../../services/fileService.js'
 import styles from './EPUBReader.module.css'
 
-function EPUBReader({ document }) {
+const fontSizes = {
+  small: '14px',
+  medium: '17px',
+  large: '20px',
+}
+
+const lineHeights = {
+  compact: '1.45',
+  comfortable: '1.7',
+  relaxed: '1.95',
+}
+
+function applyReadingTheme(rendition, preferences) {
+  if (!rendition) return
+
+  const fontSize = fontSizes[preferences?.fontSize] ?? fontSizes.medium
+  const lineHeight =
+    lineHeights[preferences?.lineSpacing] ?? lineHeights.comfortable
+
+  rendition.themes.default({
+    body: {
+      'font-size': fontSize,
+      'line-height': lineHeight,
+    },
+    p: {
+      'line-height': lineHeight,
+    },
+  })
+}
+
+function EPUBReader({ document, preferences }) {
   const viewerRef = useRef(null)
-  const bookRef = useRef(null)
   const renditionRef = useRef(null)
+  const preferencesRef = useRef(preferences)
 
   const [chapters, setChapters] = useState([])
   const [currentChapter, setCurrentChapter] = useState('')
@@ -15,8 +45,13 @@ function EPUBReader({ document }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    preferencesRef.current = preferences
+  }, [preferences])
+
+  useEffect(() => {
     let cancelled = false
-    let book
+    let book = null
+    let rendition = null
 
     async function loadBook() {
       setLoading(true)
@@ -26,52 +61,61 @@ function EPUBReader({ document }) {
 
       try {
         if (!document?.filePath || document.format !== 'EPUB') {
-          throw new Error('Select an imported EPUB from your Library.')
+          throw new Error('Select an imported EPUB file from your Library.')
         }
 
-        const data = await readDocument(document.filePath)
+        const buffer = await readDocument(document.filePath)
 
-        if (cancelled || !viewerRef.current) return
+        if (cancelled) return
 
-        book = ePub(data.buffer.slice(
-          data.byteOffset,
-          data.byteOffset + data.byteLength,
-        ))
-        bookRef.current = book
+        book = ePub(buffer)
 
-        const rendition = book.renderTo(viewerRef.current, {
+        if (!viewerRef.current) {
+          throw new Error('The EPUB reader could not be initialized.')
+        }
+
+        rendition = book.renderTo(viewerRef.current, {
           width: '100%',
           height: '100%',
           flow: 'scrolled-doc',
-          spread: 'none',
+          manager: 'continuous',
         })
 
         renditionRef.current = rendition
 
+        applyReadingTheme(rendition, preferencesRef.current)
+
         rendition.on('relocated', (location) => {
-          if (!cancelled) {
-            setCurrentChapter(location?.start?.href ?? '')
+          if (cancelled) return
+
+          const current = location?.start?.href
+          if (current) {
+            setCurrentChapter(current)
           }
         })
 
         const navigation = await book.loaded.navigation
 
-        if (!cancelled) {
-          setChapters(navigation?.toc ?? [])
-        }
+        if (cancelled) return
+
+        const toc = navigation?.toc ?? []
+        setChapters(toc)
 
         await rendition.display()
+
+        if (cancelled) return
+
+        setLoading(false)
       } catch (loadError) {
         if (!cancelled) {
           console.error('EPUB loading failed:', loadError)
           setError(
             loadError instanceof Error
               ? loadError.message
-              : 'Could not open this EPUB. The file may be damaged or unsupported.',
+              : 'Could not open this EPUB. The file may be damaged.',
           )
+          setLoading(false)
         }
-      } finally {
-        if (!cancelled) setLoading(false)
       }
     }
 
@@ -80,7 +124,6 @@ function EPUBReader({ document }) {
     return () => {
       cancelled = true
       renditionRef.current = null
-      bookRef.current = null
 
       if (book) {
         book.destroy()
@@ -88,101 +131,64 @@ function EPUBReader({ document }) {
     }
   }, [document?.filePath, document?.format])
 
-  async function navigate(direction) {
-    const rendition = renditionRef.current
-    if (!rendition) return
-
-    try {
-      if (direction === 'next') {
-        await rendition.next()
-      } else {
-        await rendition.prev()
-      }
-    } catch (navigationError) {
-      console.error('EPUB navigation failed:', navigationError)
-      setError('Could not navigate this EPUB.')
+  useEffect(() => {
+    if (renditionRef.current) {
+      applyReadingTheme(renditionRef.current, preferences)
     }
-  }
+  }, [preferences])
 
-  async function openChapter(href) {
-    if (!renditionRef.current || !href) return
-
-    try {
-      await renditionRef.current.display(href)
-    } catch (navigationError) {
-      console.error('Could not open EPUB chapter:', navigationError)
-      setError('Could not open this chapter.')
+  function openChapter(href) {
+    if (renditionRef.current && href) {
+      renditionRef.current.display(href).catch((chapterError) => {
+        console.error('Could not open EPUB chapter:', chapterError)
+        setError('Could not open this chapter. Try selecting it again.')
+      })
     }
   }
 
   return (
     <section className={styles.epubReader}>
-      <div className={styles.controls}>
-        <button
-          type="button"
-          onClick={() => navigate('previous')}
-          disabled={loading}
-        >
-          Previous
-        </button>
+      {chapters.length > 0 && (
+        <nav className={styles.contents} aria-label="Table of contents">
+          <h3>Contents</h3>
 
-        <span>EPUB reader</span>
+          {chapters.map((chapter) => (
+            <button
+              key={chapter.id ?? chapter.href}
+              type="button"
+              className={
+                currentChapter === chapter.href ? styles.activeChapter : ''
+              }
+              onClick={() => openChapter(chapter.href)}
+            >
+              {chapter.label}
+            </button>
+          ))}
+        </nav>
+      )}
 
-        <button
-          type="button"
-          onClick={() => navigate('next')}
-          disabled={loading}
-        >
-          Next
-        </button>
+      <div className={styles.bookArea}>
+        {loading && (
+          <div className={styles.status} role="status">
+            Loading EPUB…
+          </div>
+        )}
+
+        {error && (
+          <div className={styles.error} role="alert">
+            <strong>Unable to display EPUB</strong>
+            <p>{error}</p>
+          </div>
+        )}
+
+        <div
+          ref={viewerRef}
+          className={styles.bookViewer}
+          aria-label="EPUB document"
+        />
       </div>
-
-      {loading && (
-        <div className={styles.status} role="status">
-          Loading EPUB…
-        </div>
-      )}
-
-      {!loading && error && (
-        <div className={styles.error} role="alert">
-          <strong>Unable to display EPUB</strong>
-          <p>{error}</p>
-        </div>
-      )}
-
-      {!loading && !error && (
-        <div className={styles.bookLayout}>
-          {chapters.length > 0 && (
-            <nav className={styles.contents} aria-label="Book contents">
-              <h3>CONTENTS</h3>
-
-              {chapters.map((chapter, index) => (
-                <button
-                  key={`${chapter.href}-${index}`}
-                  type="button"
-                  className={
-                    currentChapter === chapter.href
-                      ? styles.activeChapter
-                      : styles.chapter
-                  }
-                  onClick={() => openChapter(chapter.href)}
-                >
-                  {chapter.label || `Chapter ${index + 1}`}
-                </button>
-              ))}
-            </nav>
-          )}
-
-          <div
-            className={styles.bookViewer}
-            ref={viewerRef}
-            aria-label="EPUB book content"
-          />
-        </div>
-      )}
     </section>
   )
 }
 
 export default EPUBReader
-

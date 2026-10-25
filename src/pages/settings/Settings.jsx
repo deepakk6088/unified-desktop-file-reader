@@ -1,44 +1,66 @@
-import { useState } from 'react'
 import styles from './Settings.module.css'
 
-function Settings({ onNavigate }) {
-  const [fontSize, setFontSize] = useState('Medium')
-  const [lineSpacing, setLineSpacing] = useState('Comfortable')
-  const [rememberPosition, setRememberPosition] = useState(true)
-  const [showProgress, setShowProgress] = useState(true)
+function Settings({
+  preferences,
+  onPreferencesChange,
+  preferencesError,
+  onNavigate,
+}) {
+  const current = preferences ?? {
+    fontSize: 'medium',
+    lineSpacing: 'comfortable',
+    readingWidth: 'comfortable',
+    showProgress: true,
+  }
+
+  function update(key, value) {
+    onPreferencesChange?.({ [key]: value })
+  }
 
   return (
     <div className={styles.settings}>
       <div className={styles.intro}>
         <h2>Your workspace, your way.</h2>
         <p>
-          These preview settings are interactive, but are not saved
-          between app restarts.
+          Customize how text-based documents appear. Your
+          preferences are saved on this device.
         </p>
       </div>
 
-      <section className={styles.section}>
+      <section
+        className={styles.section}
+        aria-labelledby="reading-experience-heading"
+      >
         <div className={styles.sectionHeading}>
-          <span className={styles.sectionIcon}>Aa</span>
+          <span className={styles.sectionIcon} aria-hidden="true">
+            Aa
+          </span>
           <div>
-            <h3>Reading experience</h3>
-            <p>Adjust how sample reading content is presented.</p>
+            <h3 id="reading-experience-heading">
+              Reading experience
+            </h3>
+            <p>
+              Adjust typography and the width of the reading page.
+            </p>
           </div>
         </div>
 
         <div className={styles.settingRow}>
           <div>
             <h4>Text size</h4>
-            <p>Choose a comfortable reading size.</p>
+            <p>Choose a comfortable size for EPUB and DOCX.</p>
           </div>
 
           <select
-            value={fontSize}
-            onChange={(event) => setFontSize(event.target.value)}
+            aria-label="Text size"
+            value={current.fontSize}
+            onChange={(event) =>
+              update('fontSize', event.target.value)
+            }
           >
-            <option>Small</option>
-            <option>Medium</option>
-            <option>Large</option>
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
           </select>
         </div>
 
@@ -49,76 +71,90 @@ function Settings({ onNavigate }) {
           </div>
 
           <select
-            value={lineSpacing}
-            onChange={(event) => setLineSpacing(event.target.value)}
+            aria-label="Line spacing"
+            value={current.lineSpacing}
+            onChange={(event) =>
+              update('lineSpacing', event.target.value)
+            }
           >
-            <option>Compact</option>
-            <option>Comfortable</option>
-            <option>Relaxed</option>
+            <option value="compact">Compact</option>
+            <option value="comfortable">Comfortable</option>
+            <option value="relaxed">Relaxed</option>
           </select>
-        </div>
-      </section>
-
-      <section className={styles.section}>
-        <div className={styles.sectionHeading}>
-          <span className={styles.sectionIcon}>◷</span>
-          <div>
-            <h3>Reading habits</h3>
-            <p>Preview the behavior of reading preferences.</p>
-          </div>
         </div>
 
         <div className={styles.settingRow}>
           <div>
-            <h4>Remember reading position</h4>
-            <p>Return to the same position when reopening a document.</p>
+            <h4>Reading width</h4>
+            <p>Choose a narrower or wider reading page.</p>
           </div>
 
-          <button
-            type="button"
-            role="switch"
-            aria-checked={rememberPosition}
-            className={`${styles.toggle} ${
-              rememberPosition ? styles.toggleOn : ''
-            }`}
-            onClick={() => setRememberPosition((value) => !value)}
+          <select
+            aria-label="Reading width"
+            value={current.readingWidth}
+            onChange={(event) =>
+              update('readingWidth', event.target.value)
+            }
           >
-            <span />
-          </button>
+            <option value="narrow">Narrow</option>
+            <option value="comfortable">Comfortable</option>
+            <option value="wide">Wide</option>
+          </select>
+        </div>
+      </section>
+
+      <section
+        className={styles.section}
+        aria-labelledby="reading-habits-heading"
+      >
+        <div className={styles.sectionHeading}>
+          <span className={styles.sectionIcon} aria-hidden="true">
+            ◷
+          </span>
+          <div>
+            <h3 id="reading-habits-heading">Reading habits</h3>
+            <p>Choose which reading helper remains visible.</p>
+          </div>
         </div>
 
         <div className={styles.settingRow}>
           <div>
             <h4>Show reading progress</h4>
-            <p>Display a progress indicator in the reader.</p>
+            <p>
+              Show the progress indicator on the sample reading
+              page when available.
+            </p>
           </div>
 
           <button
             type="button"
             role="switch"
-            aria-checked={showProgress}
+            aria-label="Show reading progress"
+            aria-checked={current.showProgress}
             className={`${styles.toggle} ${
-              showProgress ? styles.toggleOn : ''
+              current.showProgress ? styles.toggleOn : ''
             }`}
-            onClick={() => setShowProgress((value) => !value)}
+            onClick={() =>
+              update('showProgress', !current.showProgress)
+            }
           >
             <span />
           </button>
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section
+        className={styles.section}
+        aria-labelledby="application-heading"
+      >
         <div className={styles.sectionHeading}>
-          <span className={styles.sectionIcon}>▤</span>
+          <span className={styles.sectionIcon} aria-hidden="true">
+            ▤
+          </span>
           <div>
-            <h3>Application</h3>
-            <p>Basic information about your reader.</p>
+            <h3 id="application-heading">Application</h3>
+            <p>Information about your local reader.</p>
           </div>
-        </div>
-
-        <div className={styles.infoRow}>
-          <span>Application version</span>
-          <strong>1.0.0 · Preview</strong>
         </div>
 
         <div className={styles.infoRow}>
@@ -127,14 +163,28 @@ function Settings({ onNavigate }) {
         </div>
 
         <div className={styles.infoRow}>
-          <span>Document storage</span>
-          <strong>Not configured</strong>
+          <span>Supported readers</span>
+          <strong>PDF · EPUB · DOCX</strong>
+        </div>
+
+        <div className={styles.infoRow}>
+          <span>Preference storage</span>
+          <strong>On this device</strong>
         </div>
       </section>
 
+      {preferencesError && (
+        <p className={styles.errorMessage} role="alert">
+          {preferencesError}
+        </p>
+      )}
+
       <div className={styles.settingsFooter}>
-        <span>Preferences are currently temporary.</span>
-        <button type="button" onClick={() => onNavigate('library')}>
+        <span>Changes save automatically.</span>
+        <button
+          type="button"
+          onClick={() => onNavigate('library')}
+        >
           Return to Library
         </button>
       </div>

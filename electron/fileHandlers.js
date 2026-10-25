@@ -1,4 +1,3 @@
-
 import path from 'node:path'
 import { ipcMain, dialog, BrowserWindow } from 'electron'
 
@@ -14,7 +13,7 @@ export function registerFileHandlers() {
   ipcMain.handle('documents:select', async (event) => {
     const parentWindow = BrowserWindow.fromWebContents(event.sender)
 
-    const result = await dialog.showOpenDialog(parentWindow, {
+    const options = {
       title: 'Add Documents',
       properties: ['openFile', 'multiSelections'],
       filters: [
@@ -23,9 +22,12 @@ export function registerFileHandlers() {
           extensions: ['pdf', 'epub', 'docx'],
         },
       ],
-    })
+    }
 
-    // Cancellation is a normal outcome, not an error.
+    const result = parentWindow
+      ? await dialog.showOpenDialog(parentWindow, options)
+      : await dialog.showOpenDialog(options)
+
     if (result.canceled) {
       return { canceled: true, files: [] }
     }

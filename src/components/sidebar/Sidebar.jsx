@@ -1,3 +1,4 @@
+
 import styles from './Sidebar.module.css'
 
 function NavIcon({ type }) {
@@ -23,7 +24,7 @@ function NavIcon({ type }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="12" cy="12" r="3" />
-      <path d="M19 13.5a1.6 1.6 0 0 0 .4 1.7l.1.1-1.7 2.9-.1-.1a1.6 1.6 0 0 0-1.7.4l-.1.1h-3.4l-.1-.1a1.6 1.6 0 0 0-1.7-.4l-.1.1-1.7-2.9.1-.1a1.6 1.6 0 0 0 .4-1.7l-.1-.1v-2.8l.1-.1a1.6 1.6 0 0 0-.4-1.7l-.1-.1 1.7-2.9.1.1a1.6 1.6 0 0 0 1.7-.4l.1-.1h3.4l.1.1a1.6 1.6 0 0 0 1.7.4l.1-.1 1.7 2.9-.1.1a1.6 1.6 0 0 0-.4 1.7l.1.1v2.8z" />
+      <path d="M19 13.5a1.6 1.6 0 0 0 .4 1.7l.1.1-1.7 2.9-.1-.1a1.6 1.6 0 0 0-1.7.4l-.1.1h-3.4l-.1-.1a1.6 1.6 0 0 0-1.7-.4l-.1.1-1.7-2.9.1-.1a1.6 1.6 0 0 0 .4-1.7l-.1-.1v-2.8l.1-.1a1.6 1.6 0 0 0-.4-1.7l-.1-.1 1.7-2.9.1.1a1.6 1.6 0 0 0 1.7.4l.1-.1h3.4l.1.1a1.6 1.6 0 0 0 1.7.4l.1-.1 1.7 2.9-.1.1a1.6 1.6 0 0 0-.4 1.7l.1.1v2.8z" />
     </svg>
   )
 }
@@ -46,7 +47,7 @@ function Sidebar({ activePage, onNavigate }) {
         </div>
 
         <div className={styles.brandText}>
-          <span className={styles.brandName}>Unified Reader</span>
+          <span className={styles.brandName}>DocNest</span>
           <span className={styles.brandCaption}>DESKTOP WORKSPACE</span>
         </div>
       </div>
@@ -98,7 +99,7 @@ function Sidebar({ activePage, onNavigate }) {
           <span className={styles.statusDot} />
         </div>
 
-        <div className={styles.version}>Unified Reader · v1.0</div>
+        <div className={styles.version}>DocNest · v1.0</div>
       </div>
     </aside>
   )

@@ -1,4 +1,3 @@
-
 {
   "name": "unified-desktop-file-reader",
   "private": true,
@@ -12,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "pdfjs-dist": "^4.10.38",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

@@ -1,6 +1,7 @@
 
 import { app, BrowserWindow } from 'electron'
 import { join } from 'node:path'
+import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { registerFileHandlers } from './fileHandlers.js'
 

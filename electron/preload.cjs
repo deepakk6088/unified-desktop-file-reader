@@ -1,6 +1,12 @@
+
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('desktop', {
   platform: process.platform,
-  selectDocuments: () => ipcRenderer.invoke('documents:select'),
+
+  selectDocuments: () =>
+    ipcRenderer.invoke('documents:select'),
+
+  readPdf: (filePath) =>
+    ipcRenderer.invoke('documents:read-pdf', filePath),
 })

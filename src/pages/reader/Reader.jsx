@@ -1,9 +1,62 @@
+
+import PDFReader from './PDFReader.jsx'
 import styles from './Reader.module.css'
 
 function Reader({ document, onBack }) {
   const title = document?.title ?? 'A Guide to Focused Reading'
   const format = document?.format ?? 'SAMPLE'
   const category = document?.category ?? 'Reading sample'
+
+  if (document?.isImported) {
+    return (
+      <div className={styles.reader}>
+        <div className={styles.toolbar}>
+          <button
+            type="button"
+            className={styles.backButton}
+            onClick={onBack}
+          >
+            <span aria-hidden="true">←</span>
+            Back to Library
+          </button>
+
+          <span className={styles.previewBadge}>
+            {format === 'PDF' ? 'PDF READER' : 'NOT SUPPORTED YET'}
+          </span>
+        </div>
+
+        {format === 'PDF' ? (
+          <>
+            <div className={styles.documentMeta}>
+              <span>{category}</span>
+              <span className={styles.metaDivider}>/</span>
+              <span>{document.fileName ?? title}</span>
+            </div>
+
+            <h2>{title}</h2>
+
+            <PDFReader document={document} />
+          </>
+        ) : (
+          <article className={styles.paper}>
+            <div className={styles.documentMeta}>
+              <span>{format}</span>
+              <span className={styles.metaDivider}>/</span>
+              <span>Reader unavailable</span>
+            </div>
+
+            <h2>{title}</h2>
+
+            <p>
+              Reading {format} documents is not supported yet. You can
+              return to your Library and continue using your imported file
+              later when this format is implemented.
+            </p>
+          </article>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className={styles.reader}>
@@ -53,8 +106,7 @@ function Reader({ document, onBack }) {
           <h2>{title}</h2>
 
           <p className={styles.subtitle}>
-            A sample reading experience for your unified document
-            workspace.
+            A sample reading experience for your unified document workspace.
           </p>
 
           <div className={styles.rule} />
@@ -85,8 +137,8 @@ function Reader({ document, onBack }) {
           <p>
             Break longer reading sessions into manageable sections.
             Keep the interface quiet and the content easy to scan.
-            Progress indicators and bookmarks can help you return to
-            the right place without searching through the document again.
+            Progress indicators and bookmarks can help you return to the
+            right place without searching through the document again.
           </p>
 
           <div className={styles.pageFooter}>

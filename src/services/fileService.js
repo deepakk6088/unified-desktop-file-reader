@@ -1,7 +1,8 @@
+
 export async function selectDocuments() {
   if (!window.desktop?.selectDocuments) {
     throw new Error(
-      'Electron preload API is unavailable. Check that preload.js loads correctly.',
+      'Electron preload API is unavailable. Check that preload.cjs loads correctly.',
     )
   }
 
@@ -16,4 +17,24 @@ export async function selectDocuments() {
   }
 
   return result
+}
+
+export async function readPdf(filePath) {
+  if (!window.desktop?.readPdf) {
+    throw new Error(
+      'PDF access is unavailable. Check that preload.cjs exposes readPdf.',
+    )
+  }
+
+  if (typeof filePath !== 'string' || !filePath) {
+    throw new Error('This document has no local file reference.')
+  }
+
+  const data = await window.desktop.readPdf(filePath)
+
+  if (!(data instanceof Uint8Array)) {
+    throw new Error('Electron returned invalid PDF data.')
+  }
+
+  return data
 }

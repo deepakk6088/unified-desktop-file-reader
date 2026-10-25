@@ -38,3 +38,23 @@ export async function readPdf(filePath) {
 
   return data
 }
+
+export async function readDocument(filePath) {
+  if (!window.desktop?.readDocument) {
+    throw new Error(
+      'Document access is unavailable. Check that preload.cjs exposes readDocument.',
+    )
+  }
+
+  if (typeof filePath !== 'string' || !filePath) {
+    throw new Error('This document has no local file reference.')
+  }
+
+  const data = await window.desktop.readDocument(filePath)
+
+  if (!(data instanceof Uint8Array)) {
+    throw new Error('Electron returned invalid document data.')
+  }
+
+  return data
+}

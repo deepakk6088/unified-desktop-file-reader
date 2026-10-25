@@ -11,6 +11,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "dompurify": "^3.4.17",
+    "epubjs": "^0.3.93",
+    "mammoth": "^1.13.0",
     "pdfjs-dist": "^4.10.38",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"

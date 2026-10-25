@@ -9,4 +9,7 @@ contextBridge.exposeInMainWorld('desktop', {
 
   readPdf: (filePath) =>
     ipcRenderer.invoke('documents:read-pdf', filePath),
+
+  readDocument: (filePath) =>
+    ipcRenderer.invoke('documents:read-file', filePath),
 })

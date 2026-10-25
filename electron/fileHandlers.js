@@ -5,7 +5,7 @@ import { readFile, stat } from 'node:fs/promises'
 import { ipcMain, dialog, BrowserWindow } from 'electron'
 
 const allowedExtensions = new Set(['.pdf', '.epub', '.docx'])
-const MAX_PDF_SIZE = 100 * 1024 * 1024
+const MAX_DOCUMENT_SIZE = 100 * 1024 * 1024
 
 const formatNames = {
   '.pdf': 'PDF',
@@ -13,11 +13,40 @@ const formatNames = {
   '.docx': 'DOCX',
 }
 
-// Only files selected through this native picker may be read.
 const selectedFiles = new Map()
 
 function isTrustedMainFrame(event) {
   return event.senderFrame === event.sender.mainFrame
+}
+
+async function readSelectedFile(filePath, allowedExtension) {
+  if (typeof filePath !== 'string' || !filePath) {
+    throw new Error('No document was specified.')
+  }
+
+  const extension = path.extname(filePath).toLowerCase()
+
+  if (!allowedExtension.has(extension)) {
+    throw new Error('This document format is not supported.')
+  }
+
+  if (![...selectedFiles.values()].includes(filePath)) {
+    throw new Error(
+      'This file was not selected through the document picker. Add it to your library again.',
+    )
+  }
+
+  const fileInfo = await stat(filePath)
+
+  if (!fileInfo.isFile()) {
+    throw new Error('The selected document is not a regular file.')
+  }
+
+  if (fileInfo.size > MAX_DOCUMENT_SIZE) {
+    throw new Error('This document is larger than the 100 MB limit.')
+  }
+
+  return new Uint8Array(await readFile(filePath))
 }
 
 export function registerFileHandlers() {
@@ -80,36 +109,14 @@ export function registerFileHandlers() {
       throw new Error('Untrusted request.')
     }
 
-    if (typeof filePath !== 'string' || !filePath) {
-      throw new Error('No PDF was specified.')
+    return readSelectedFile(filePath, new Set(['.pdf']))
+  })
+
+  ipcMain.handle('documents:read-file', async (event, filePath) => {
+    if (!isTrustedMainFrame(event)) {
+      throw new Error('Untrusted request.')
     }
 
-    const extension = path.extname(filePath).toLowerCase()
-
-    if (extension !== '.pdf') {
-      throw new Error('Only PDF documents can be opened in the reader.')
-    }
-
-    const isSelected = [...selectedFiles.values()].includes(filePath)
-
-    if (!isSelected) {
-      throw new Error(
-        'This file was not selected through the document picker. Add it to your library again.',
-      )
-    }
-
-    const fileInfo = await stat(filePath)
-
-    if (!fileInfo.isFile()) {
-      throw new Error('The selected document is not a regular file.')
-    }
-
-    if (fileInfo.size > MAX_PDF_SIZE) {
-      throw new Error('This PDF is larger than the 100 MB limit.')
-    }
-
-    const buffer = await readFile(filePath)
-
-    return new Uint8Array(buffer)
+    return readSelectedFile(filePath, new Set(['.epub', '.docx']))
   })
 }

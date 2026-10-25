@@ -1,5 +1,7 @@
 
 import PDFReader from './PDFReader.jsx'
+import EPUBReader from './EPUBReader.jsx'
+import DOCXReader from './DOCXReader.jsx'
 import styles from './Reader.module.css'
 
 function Reader({ document, onBack }) {
@@ -8,6 +10,8 @@ function Reader({ document, onBack }) {
   const category = document?.category ?? 'Reading sample'
 
   if (document?.isImported) {
+    const supportedFormat = ['PDF', 'EPUB', 'DOCX'].includes(format)
+
     return (
       <div className={styles.reader}>
         <div className={styles.toolbar}>
@@ -21,36 +25,27 @@ function Reader({ document, onBack }) {
           </button>
 
           <span className={styles.previewBadge}>
-            {format === 'PDF' ? 'PDF READER' : 'NOT SUPPORTED YET'}
+            {supportedFormat ? `${format} READER` : 'UNSUPPORTED FORMAT'}
           </span>
         </div>
 
-        {format === 'PDF' ? (
-          <>
-            <div className={styles.documentMeta}>
-              <span>{category}</span>
-              <span className={styles.metaDivider}>/</span>
-              <span>{document.fileName ?? title}</span>
-            </div>
+        <div className={styles.documentMeta}>
+          <span>{category}</span>
+          <span className={styles.metaDivider}>/</span>
+          <span>{document.fileName ?? title}</span>
+        </div>
 
-            <h2>{title}</h2>
+        <h2>{title}</h2>
 
-            <PDFReader document={document} />
-          </>
-        ) : (
+        {format === 'PDF' && <PDFReader document={document} />}
+        {format === 'EPUB' && <EPUBReader document={document} />}
+        {format === 'DOCX' && <DOCXReader document={document} />}
+
+        {!supportedFormat && (
           <article className={styles.paper}>
-            <div className={styles.documentMeta}>
-              <span>{format}</span>
-              <span className={styles.metaDivider}>/</span>
-              <span>Reader unavailable</span>
-            </div>
-
-            <h2>{title}</h2>
-
             <p>
-              Reading {format} documents is not supported yet. You can
-              return to your Library and continue using your imported file
-              later when this format is implemented.
+              This file format is not supported. Add a PDF, EPUB, or DOCX
+              document to read it here.
             </p>
           </article>
         )}
@@ -115,30 +110,29 @@ function Reader({ document, onBack }) {
 
           <p>
             A good reading environment helps you spend less time managing
-            documents and more time understanding what matters. This
-            preview demonstrates the reading layout that will eventually
-            display your selected documents.
+            documents and more time understanding what matters. This preview
+            demonstrates the reading layout that will eventually display your
+            selected documents.
           </p>
 
           <p>
-            In the finished application, this space will adapt to the
-            document format. For now, the content is static sample text
-            so you can review the typography, line length, spacing, and
-            reading controls.
+            In the finished application, this space will adapt to the document
+            format. For now, the content is static sample text so you can
+            review the typography, line length, spacing, and reading controls.
           </p>
 
           <blockquote>
-            Make space for focused reading. A simple, consistent
-            environment can make returning to a document feel effortless.
+            Make space for focused reading. A simple, consistent environment
+            can make returning to a document feel effortless.
           </blockquote>
 
           <h3>Building a routine</h3>
 
           <p>
-            Break longer reading sessions into manageable sections.
-            Keep the interface quiet and the content easy to scan.
-            Progress indicators and bookmarks can help you return to the
-            right place without searching through the document again.
+            Break longer reading sessions into manageable sections. Keep the
+            interface quiet and the content easy to scan. Progress indicators
+            and bookmarks can help you return to the right place without
+            searching through the document again.
           </p>
 
           <div className={styles.pageFooter}>

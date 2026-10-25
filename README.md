@@ -170,30 +170,6 @@ npm run build
 
 Confirm that Vite completes the build successfully.
 
-### 3. Desktop functionality
-
-Run `npm run dev` and manually verify:
-
-- [ ] The application launches.
-- [ ] A local PDF can be imported and opened.
-- [ ] PDF pages render and page navigation works.
-- [ ] Search and format filters behave correctly.
-- [ ] Returning to the Library does not remove imported documents.
-- [ ] The library persists after restarting the application.
-- [ ] Settings and other visible controls behave as expected.
-- [ ] Unsupported document formats show a clear message rather than appearing to work.
-
-### 4. Packaged application
-
-Build the macOS package and test the packaged app separately from development mode.
-
-- [ ] The packaged app opens without an IPC error.
-- [ ] Importing and saving a document works.
-- [ ] The PDF reader and its worker load correctly.
-- [ ] The library persists after closing and reopening the app.
-- [ ] The DMG installer is created successfully, if submitting a DMG.
-
-Record only the checks that actually pass.
 
 ## Data Storage and Privacy
 

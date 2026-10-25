@@ -1,9 +1,9 @@
 
-import { useState } from 'react'
-import sampleDocuments from '../../data/sampleDocuments.js'
+import { useEffect, useState } from 'react'
 import DocumentCard from '../../components/documents/DocumentCard.jsx'
-import styles from './Library.module.css'
+import { loadLibrary, saveLibrary } from '../../services/libraryService.js'
 import { selectDocuments } from '../../services/fileService.js'
+import styles from './Library.module.css'
 
 const filters = ['All', 'PDF', 'EPUB', 'DOCX']
 
@@ -38,7 +38,7 @@ function ListIcon() {
   )
 }
 
-function EmptyState({ isSearch, onReset }) {
+function EmptyState({ isSearch, onReset, onAdd }) {
   return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>
@@ -52,18 +52,22 @@ function EmptyState({ isSearch, onReset }) {
       <p>
         {isSearch
           ? 'Try a different title, author, category, or format.'
-          : 'Your documents will appear here when you add them.'}
+          : 'Add a PDF, EPUB, or DOCX from your system to see it here.'}
       </p>
 
-      <button type="button" onClick={onReset}>
-        {isSearch ? 'Clear search and filters' : 'Reset library view'}
+      <button
+        type="button"
+        onClick={isSearch ? onReset : onAdd}
+      >
+        {isSearch ? 'Clear search and filters' : 'Add documents'}
       </button>
     </div>
   )
 }
 
 function Library({ onOpenDocument }) {
-  const [documents, setDocuments] = useState(sampleDocuments)
+  const [documents, setDocuments] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isPickingFiles, setIsPickingFiles] = useState(false)
   const [fileError, setFileError] = useState('')
 
@@ -71,8 +75,50 @@ function Library({ onOpenDocument }) {
   const [activeFilter, setActiveFilter] = useState('All')
   const [view, setView] = useState('grid')
 
+  useEffect(() => {
+    let cancelled = false
+
+    async function restoreLibrary() {
+      try {
+        const savedDocuments = await loadLibrary()
+
+        // Only display genuine documents previously imported by the user.
+        const importedDocuments = savedDocuments.filter(
+          (document) =>
+            document?.isImported === true &&
+            typeof document.filePath === 'string' &&
+            ['PDF', 'EPUB', 'DOCX'].includes(document.format),
+        )
+
+        if (!cancelled) {
+          setDocuments(importedDocuments)
+        }
+      } catch (error) {
+        console.error('Unable to load the saved library:', error)
+
+        if (!cancelled) {
+          setFileError(
+            error instanceof Error
+              ? `Could not load your saved library: ${error.message}`
+              : 'Could not load your saved library.',
+          )
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    restoreLibrary()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   async function handleAddDocuments() {
-    if (isPickingFiles) return
+    if (isPickingFiles || isLoading) return
 
     setIsPickingFiles(true)
     setFileError('')
@@ -80,65 +126,77 @@ function Library({ onOpenDocument }) {
     try {
       const result = await selectDocuments()
 
-      // Closing the native dialog without selecting files changes nothing.
       if (result.canceled || result.files.length === 0) return
 
-      setDocuments((currentDocuments) => {
-        const existingPaths = new Set(
-          currentDocuments
-            .filter((document) => document.filePath)
-            .map((document) => document.filePath),
-        )
+      const existingPaths = new Set(
+        documents.map((document) => document.filePath),
+      )
 
-        const newPaths = new Set(existingPaths)
+      const newDocuments = result.files
+        .filter((file) => {
+          if (existingPaths.has(file.filePath)) return false
 
-        const newDocuments = result.files
-          .filter((file) => {
-            if (newPaths.has(file.filePath)) return false
+          existingPaths.add(file.filePath)
+          return true
+        })
+        .map((file) => ({
+          id: `import-${crypto.randomUUID()}`,
+          title: file.title,
+          author: 'Imported document',
+          format: file.format,
+          category: 'Imported',
+          updatedAt: 'Added just now',
+          progress: 0,
+          color:
+            file.format === 'PDF'
+              ? 'violet'
+              : file.format === 'EPUB'
+                ? 'green'
+                : 'blue',
+          filePath: file.filePath,
+          fileName: file.fileName,
+          isImported: true,
+        }))
 
-            // Also prevent duplicates within the same selection.
-            newPaths.add(file.filePath)
-            return true
-          })
-          .map((file) => ({
-            id: `import-${crypto.randomUUID()}`,
-            title: file.title,
-            author: 'Imported document',
-            format: file.format,
-            category: 'Imported',
-            updatedAt: 'Added just now',
-            progress: 0,
-            color:
-              file.format === 'PDF'
-                ? 'violet'
-                : file.format === 'EPUB'
-                  ? 'green'
-                  : 'blue',
-            filePath: file.filePath,
-            fileName: file.fileName,
-            isImported: true,
-          }))
+      if (newDocuments.length === 0) return
 
-        return [...newDocuments, ...currentDocuments]
-      })
+      const nextDocuments = [...newDocuments, ...documents]
+
+      // Save first, so navigating away immediately cannot lose the import.
+      await saveLibrary(nextDocuments)
+      setDocuments(nextDocuments)
     } catch (error) {
       console.error('Unable to add documents:', error)
+
       setFileError(
         error instanceof Error
           ? error.message
-          : 'Could not open the file picker. Please try again.',
+          : 'Could not add documents. Please try again.',
       )
     } finally {
       setIsPickingFiles(false)
     }
   }
 
-  function handleRemoveDocument(documentId) {
-    setDocuments((currentDocuments) =>
-      currentDocuments.filter(
-        (document) => document.id !== documentId,
-      ),
+  async function handleRemoveDocument(documentId) {
+    setFileError('')
+
+    const nextDocuments = documents.filter(
+      (document) => document.id !== documentId,
     )
+
+    try {
+      await saveLibrary(nextDocuments)
+      setDocuments(nextDocuments)
+    } catch (error) {
+      console.error('Unable to update the saved library:', error)
+
+      setFileError(
+        error instanceof Error
+          ? error.message
+          : 'Could not update the saved library.',
+      )
+    }
   }
 
   const normalizedQuery = searchQuery.trim().toLowerCase()
@@ -161,8 +219,7 @@ function Library({ onOpenDocument }) {
   })
 
   const hasDocuments = documents.length > 0
-  const hasFilters =
-    normalizedQuery !== '' || activeFilter !== 'All'
+  const hasFilters = normalizedQuery !== '' || activeFilter !== 'All'
 
   function resetFilters() {
     setSearchQuery('')
@@ -181,7 +238,7 @@ function Library({ onOpenDocument }) {
         </div>
 
         <div className={styles.documentCount}>
-          <span>{documents.length}</span>
+          <span>{isLoading ? '—' : documents.length}</span>
           <span>Total documents</span>
         </div>
       </section>
@@ -191,7 +248,9 @@ function Library({ onOpenDocument }) {
           <div>
             <h3>Your documents</h3>
             <p>
-              {filteredDocuments.length} of {documents.length} documents
+              {isLoading
+                ? 'Loading your library…'
+                : `${filteredDocuments.length} of ${documents.length} documents`}
             </p>
           </div>
 
@@ -199,10 +258,14 @@ function Library({ onOpenDocument }) {
             type="button"
             className={styles.addDocumentsButton}
             onClick={handleAddDocuments}
-            disabled={isPickingFiles}
+            disabled={isPickingFiles || isLoading}
           >
             <span className={styles.addButtonIcon} aria-hidden="true">+</span>
-            {isPickingFiles ? 'Opening picker…' : 'Add Documents'}
+            {isPickingFiles
+              ? 'Opening picker…'
+              : isLoading
+                ? 'Loading…'
+                : 'Add Documents'}
           </button>
         </div>
 
@@ -231,18 +294,13 @@ function Library({ onOpenDocument }) {
           </label>
 
           <div className={styles.toolbarRight}>
-            <div
-              className={styles.filters}
-              aria-label="Filter by format"
-            >
+            <div className={styles.filters} aria-label="Filter by format">
               {filters.map((filter) => (
                 <button
                   key={filter}
                   type="button"
                   className={
-                    activeFilter === filter
-                      ? styles.filterActive
-                      : ''
+                    activeFilter === filter ? styles.filterActive : ''
                   }
                   onClick={() => setActiveFilter(filter)}
                   aria-pressed={activeFilter === filter}
@@ -252,10 +310,7 @@ function Library({ onOpenDocument }) {
               ))}
             </div>
 
-            <div
-              className={styles.viewSwitch}
-              aria-label="Document layout"
-            >
+            <div className={styles.viewSwitch} aria-label="Document layout">
               <button
                 type="button"
                 className={view === 'grid' ? styles.viewActive : ''}
@@ -285,10 +340,15 @@ function Library({ onOpenDocument }) {
           </p>
         )}
 
-        {!hasDocuments || filteredDocuments.length === 0 ? (
+        {isLoading ? (
+          <div className={styles.emptyState} role="status">
+            <p>Loading your saved documents…</p>
+          </div>
+        ) : !hasDocuments || filteredDocuments.length === 0 ? (
           <EmptyState
             isSearch={hasDocuments && hasFilters}
             onReset={resetFilters}
+            onAdd={handleAddDocuments}
           />
         ) : (
           <div
@@ -313,9 +373,9 @@ function Library({ onOpenDocument }) {
 
       <div className={styles.notice}>
         <span />
-        {documents.some((document) => document.isImported)
-          ? 'Your library contains sample entries and imported documents.'
-          : 'Sample entries only — add documents to your library.'}
+        {isLoading
+          ? 'Loading your locally saved library.'
+          : 'Your library is saved on this device. Removing a document here does not delete the original file.'}
       </div>
     </div>
   )

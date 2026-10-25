@@ -12,4 +12,10 @@ contextBridge.exposeInMainWorld('desktop', {
 
   readDocument: (filePath) =>
     ipcRenderer.invoke('documents:read-file', filePath),
+
+  loadLibrary: () =>
+    ipcRenderer.invoke('library:load'),
+
+  saveLibrary: (library) =>
+    ipcRenderer.invoke('library:save', library),
 })

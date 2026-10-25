@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { registerFileHandlers } from './fileHandlers.js'
+import { registerStorageHandlers } from './storage.js'
 
 const currentDirectory = fileURLToPath(new URL('.', import.meta.url))
 
@@ -30,6 +31,7 @@ function createWindow() {
 }
 
 registerFileHandlers()
+registerStorageHandlers()
 
 app.whenReady().then(() => {
   createWindow()

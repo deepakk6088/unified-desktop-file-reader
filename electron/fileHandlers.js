@@ -3,6 +3,7 @@ import path from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { readFile, stat } from 'node:fs/promises'
 import { ipcMain, dialog, BrowserWindow } from 'electron'
+import { isDocumentInStoredLibrary } from './storage.js'
 
 const allowedExtensions = new Set(['.pdf', '.epub', '.docx'])
 const MAX_DOCUMENT_SIZE = 100 * 1024 * 1024
@@ -19,20 +20,26 @@ function isTrustedMainFrame(event) {
   return event.senderFrame === event.sender.mainFrame
 }
 
-async function readSelectedFile(filePath, allowedExtension) {
+async function readSelectedFile(filePath, allowedFormats) {
   if (typeof filePath !== 'string' || !filePath) {
     throw new Error('No document was specified.')
   }
 
   const extension = path.extname(filePath).toLowerCase()
 
-  if (!allowedExtension.has(extension)) {
+  if (!allowedFormats.has(extension)) {
     throw new Error('This document format is not supported.')
   }
 
-  if (![...selectedFiles.values()].includes(filePath)) {
+  const selectedInThisSession = [...selectedFiles.values()].some(
+    (selectedPath) => path.resolve(selectedPath) === path.resolve(filePath),
+  )
+
+  const savedInLibrary = await isDocumentInStoredLibrary(filePath)
+
+  if (!selectedInThisSession && !savedInLibrary) {
     throw new Error(
-      'This file was not selected through the document picker. Add it to your library again.',
+      'This file is not in your library. Add it again through the document picker.',
     )
   }
 
@@ -84,7 +91,8 @@ export function registerFileHandlers() {
         const extension = path.extname(filePath).toLowerCase()
 
         let fileId = [...selectedFiles.entries()].find(
-          ([, selectedPath]) => selectedPath === filePath,
+          ([, selectedPath]) =>
+            path.resolve(selectedPath) === path.resolve(filePath),
         )?.[0]
 
         if (!fileId) {

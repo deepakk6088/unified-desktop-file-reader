@@ -3,6 +3,11 @@ import { useEffect, useRef, useState } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 import { readPdf } from '../../services/fileService.js'
+import {
+  loadLibrary,
+  saveLibrary,
+} from '../../services/libraryService.js'
+import BookmarkBar from './BookmarkBar.jsx'
 import styles from './PDFReader.module.css'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
@@ -12,6 +17,7 @@ function PDFReader({ document }) {
   const viewerRef = useRef(null)
   const pdfRef = useRef(null)
   const renderTaskRef = useRef(null)
+  const progressQueueRef = useRef(Promise.resolve())
 
   const [pdf, setPdf] = useState(null)
   const [pageNumber, setPageNumber] = useState(1)
@@ -22,13 +28,13 @@ function PDFReader({ document }) {
 
   useEffect(() => {
     let cancelled = false
-    let loadedDocument = null
+    let loadedPdf = null
 
     async function loadPdf() {
       setLoading(true)
       setError('')
       setPdf(null)
-      setPageNumber(1)
+      pdfRef.current = null
 
       try {
         if (!document?.filePath || document.format !== 'PDF') {
@@ -36,27 +42,31 @@ function PDFReader({ document }) {
         }
 
         const data = await readPdf(document.filePath)
-
         if (cancelled) return
 
-        const loadingTask = pdfjsLib.getDocument({ data })
-        loadedDocument = await loadingTask.promise
-
+        loadedPdf = await pdfjsLib.getDocument({ data }).promise
         if (cancelled) {
-          await loadedDocument.destroy()
+          await loadedPdf.destroy()
           return
         }
 
-        pdfRef.current = loadedDocument
-        setPdf(loadedDocument)
+        const savedPage = Number.isInteger(document.currentPage)
+          ? document.currentPage
+          : 1
+        const initialPage = Math.min(
+          loadedPdf.numPages,
+          Math.max(1, savedPage),
+        )
+
+        pdfRef.current = loadedPdf
+        setPageNumber(initialPage)
+        setPdf(loadedPdf)
       } catch (loadError) {
         if (!cancelled) {
           console.error('PDF loading failed:', loadError)
-          setError(
-            loadError instanceof Error
-              ? loadError.message
-              : 'Could not open this PDF. The file may be damaged.',
-          )
+          setError(loadError instanceof Error
+            ? loadError.message
+            : 'Could not open this PDF.')
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -69,12 +79,9 @@ function PDFReader({ document }) {
       cancelled = true
       renderTaskRef.current?.cancel()
       pdfRef.current = null
-
-      if (loadedDocument) {
-        loadedDocument.destroy().catch(() => {})
-      }
+      if (loadedPdf) loadedPdf.destroy().catch(() => {})
     }
-  }, [document?.filePath, document?.format])
+  }, [document?.filePath, document?.format, document?.id])
 
   useEffect(() => {
     if (!pdf || !canvasRef.current) return undefined
@@ -85,8 +92,6 @@ function PDFReader({ document }) {
 
     async function renderPage() {
       setRendering(true)
-      setError('')
-
       try {
         renderTaskRef.current?.cancel()
 
@@ -101,20 +106,22 @@ function PDFReader({ document }) {
         canvas.style.width = `${Math.floor(viewport.width)}px`
         canvas.style.height = `${Math.floor(viewport.height)}px`
 
-        const renderTask = page.render({
+        const task = page.render({
           canvasContext: context,
           viewport,
-          transform:
-            outputScale !== 1
-              ? [outputScale, 0, 0, outputScale, 0, 0]
-              : null,
+          transform: outputScale !== 1
+            ? [outputScale, 0, 0, outputScale, 0, 0]
+            : null,
         })
 
-        renderTaskRef.current = renderTask
-        await renderTask.promise
+        renderTaskRef.current = task
+        await task.promise
       } catch (renderError) {
-        if (renderError?.name !== 'RenderingCancelledException' && !cancelled) {
-          console.error('PDF page rendering failed:', renderError)
+        if (
+          renderError?.name !== 'RenderingCancelledException' &&
+          !cancelled
+        ) {
+          console.error('PDF rendering failed:', renderError)
           setError('This page could not be rendered. Try another page or zoom level.')
         }
       } finally {
@@ -130,12 +137,40 @@ function PDFReader({ document }) {
     }
   }, [pdf, pageNumber, zoom])
 
+  useEffect(() => {
+    if (!pdf || !document?.isImported || !document.id) return
+
+    const progress = Math.min(100, Math.round((pageNumber / pdf.numPages) * 100))
+
+    progressQueueRef.current = progressQueueRef.current
+      .catch(() => {})
+      .then(async () => {
+        const library = await loadLibrary()
+        await saveLibrary(library.map((item) =>
+          item.id === document.id
+            ? { ...item, currentPage: pageNumber, progress }
+            : item,
+        ))
+      })
+      .catch((saveError) => {
+        console.error('Unable to save PDF progress:', saveError)
+      })
+  }, [pdf, pageNumber, document?.id, document?.isImported])
+
+  function jumpToBookmark(bookmark) {
+    const targetPage = bookmark?.position?.pageNumber
+    if (Number.isInteger(targetPage) && pdf) {
+      setError('')
+      setPageNumber(Math.min(pdf.numPages, Math.max(1, targetPage)))
+    }
+  }
+
   function zoomOut() {
-    setZoom((current) => Math.max(0.5, Math.round((current - 0.1) * 10) / 10))
+    setZoom((value) => Math.max(0.5, Math.round((value - 0.1) * 10) / 10))
   }
 
   function zoomIn() {
-    setZoom((current) => Math.min(2.5, Math.round((current + 0.1) * 10) / 10))
+    setZoom((value) => Math.min(2.5, Math.round((value + 0.1) * 10) / 10))
   }
 
   async function fitWidth() {
@@ -143,15 +178,9 @@ function PDFReader({ document }) {
 
     try {
       const page = await pdf.getPage(pageNumber)
-      const baseViewport = page.getViewport({ scale: 1 })
-      const availableWidth = viewerRef.current.clientWidth - 48
-
-      setZoom(
-        Math.max(
-          0.5,
-          Math.min(2.5, Math.round((availableWidth / baseViewport.width) * 10) / 10),
-        ),
-      )
+      const width = page.getViewport({ scale: 1 }).width
+      const available = viewerRef.current.clientWidth - 48
+      setZoom(Math.max(0.5, Math.min(2.5, Math.round((available / width) * 10) / 10)))
     } catch (fitError) {
       console.error('Unable to fit PDF page:', fitError)
       setError('Could not fit this page to the viewer width.')
@@ -169,16 +198,10 @@ function PDFReader({ document }) {
           >
             Previous
           </button>
-
-          <span>
-            {pdf ? `Page ${pageNumber} of ${pdf.numPages}` : 'Page —'}
-          </span>
-
+          <span>{pdf ? `Page ${pageNumber} of ${pdf.numPages}` : 'Page —'}</span>
           <button
             type="button"
-            onClick={() =>
-              setPageNumber((page) => Math.min(pdf?.numPages ?? 1, page + 1))
-            }
+            onClick={() => setPageNumber((page) => Math.min(pdf?.numPages ?? 1, page + 1))}
             disabled={!pdf || pageNumber >= (pdf?.numPages ?? 1) || loading}
           >
             Next
@@ -186,41 +209,37 @@ function PDFReader({ document }) {
         </div>
 
         <div className={styles.zoomControls}>
-          <button type="button" onClick={zoomOut} disabled={!pdf || zoom <= 0.5}>
-            −
-          </button>
+          <button type="button" onClick={zoomOut} disabled={!pdf || zoom <= 0.5}>−</button>
           <span>{Math.round(zoom * 100)}%</span>
-          <button type="button" onClick={zoomIn} disabled={!pdf || zoom >= 2.5}>
-            +
-          </button>
-          <button type="button" onClick={fitWidth} disabled={!pdf}>
-            Fit width
-          </button>
+          <button type="button" onClick={zoomIn} disabled={!pdf || zoom >= 2.5}>+</button>
+          <button type="button" onClick={fitWidth} disabled={!pdf}>Fit width</button>
         </div>
       </div>
 
-      <div className={styles.viewer} ref={viewerRef}>
-        {loading && (
-          <div className={styles.status} role="status">
-            <span className={styles.spinner} />
-            Loading PDF…
-          </div>
-        )}
+      <BookmarkBar
+        document={document}
+        currentLocation={{
+          key: `pdf-page-${pageNumber}`,
+          label: `Page ${pageNumber}`,
+          position: { pageNumber },
+        }}
+        onJump={jumpToBookmark}
+      />
 
-        {!loading && error && (
-          <div className={styles.error} role="alert">
-            <strong>Unable to display PDF</strong>
-            <p>{error}</p>
-          </div>
-        )}
+      <div className={styles.viewer} ref={viewerRef}>
+        {loading && <div className={styles.status} role="status">
+          <span className={styles.spinner} />
+          Loading PDF…
+        </div>}
+
+        {!loading && error && <div className={styles.error} role="alert">
+          <strong>Unable to display PDF</strong>
+          <p>{error}</p>
+        </div>}
 
         {!loading && !error && pdf && (
           <>
-            {rendering && (
-              <div className={styles.renderStatus} role="status">
-                Rendering page…
-              </div>
-            )}
+            {rendering && <div className={styles.renderStatus} role="status">Rendering page…</div>}
             <canvas
               ref={canvasRef}
               className={styles.pageCanvas}

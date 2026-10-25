@@ -1,4 +1,5 @@
 import styles from './DocumentCard.module.css'
+
 function DocumentIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -18,14 +19,14 @@ function DocumentCard({
 
   return (
     <div
-      className={`${styles.cardWrapper || ''} ${
-        isList ? styles.listCardWrapper || '' : ''
+      className={`${styles.cardWrapper} ${
+        isList ? styles.listCardWrapper : ''
       }`}
     >
       <button
         type="button"
         className={`${styles.card} ${isList ? styles.listCard : ''}`}
-        onClick={() => onOpen(document)}
+        onClick={() => onOpen?.(document)}
         aria-label={`Open ${document.title}`}
       >
         <div className={`${styles.cover} ${styles[document.color]}`}>
@@ -60,6 +61,7 @@ function DocumentCard({
       {document.isImported && (
         <button
           type="button"
+          className={styles.removeButton}
           aria-label={`Remove ${document.title} from library`}
           onClick={() => onRemove?.(document.id)}
         >
